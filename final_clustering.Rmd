@@ -1,0 +1,220 @@
+---
+title: "clustering"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+setwd("/Users/nikhilsharma/Downloads")
+library(readr)
+data <- read_csv("all_stars.csv")
+```
+
+```{r}
+#View(data)
+```
+ 
+principal components analysis
+```{r}
+z <- prcomp(data[,c(9:30, 32:49)], center = TRUE,scale. = TRUE)
+
+summary(z)
+```
+
+create dataframe with only components
+```{r}
+c <- z[["x"]]
+all <- cbind.data.frame(data$player, data$i, data$tm, c[,1], c[,2], c[,3])
+names(all) <- c("Player", "i", "Team", "Component_1", "Component_2", "Component_3")
+#View(all)
+```
+
+determining optimal number of clusters
+```{r}
+library(factoextra)
+set.seed(123)
+fviz_nbclust(all[,4:6], kmeans, method = "silhouette")
+```
+
+clustering
+```{r}
+set.seed(123)
+all_clusters <- kmeans(all[,4:6], 7, nstart=25)
+all_clusters
+```
+
+```{r}
+all_full <- cbind.data.frame(data, all_clusters$cluster, all[,4], all[,5], all[,6])
+#View(all_full)
+```
+
+```{r}
+names(all_full)[50:53]  <- c("Cluster", "Component_1", "Component_2", "Component_3")
+```
+
+1st cluster
+```{r}
+library(dplyr)
+all1 <- filter(all_full, Cluster == 1)
+all1 <- all1 %>% mutate(dist=sqrt((all1[,51] - all_clusters$centers[1,1])^2 +
+                                  (all1[,52] - all_clusters$centers[1,2])^2 +
+                                  (all1[,53] - all_clusters$centers[1,3])^2 ))
+
+all1[which.min(all1$dist), ]
+```
+
+```{r}
+all1$player
+```
+
+2nd cluster
+```{r}
+all2 <- filter(all_full, Cluster == 2)
+all2 <- all2 %>% mutate(dist=sqrt((all2[,51] - all_clusters$centers[1,1])^2 +
+                                  (all2[,52] - all_clusters$centers[1,2])^2 +
+                                  (all2[,53] - all_clusters$centers[1,3])^2 ))
+
+all2[which.min(all2$dist), ]
+```
+
+```{r}
+all2$player
+```
+
+3rd cluster
+```{r}
+all3 <- filter(all_full, Cluster == 3)
+all3$player
+```
+
+```{r}
+all3 <- all3 %>% mutate(dist=sqrt((all3[,51] - all_clusters$centers[1,1])^2 +
+                                  (all3[,52] - all_clusters$centers[1,2])^2 +
+                                  (all3[,53] - all_clusters$centers[1,3])^2 ))
+
+all3[which.min(all3$dist), ]
+```
+
+4th cluster
+```{r}
+all4 <- filter(all_full, Cluster == 4)
+all4 <- all4 %>% mutate(dist=sqrt((all4[,51] - all_clusters$centers[1,1])^2 +
+                                  (all4[,52] - all_clusters$centers[1,2])^2 +
+                                  (all4[,53] - all_clusters$centers[1,3])^2 ))
+
+all4[which.min(all4$dist), ]
+```
+
+```{r}
+all4$player
+```
+
+```{r}
+all5 <- filter(all_full, Cluster == 5)
+all5 <- all5 %>% mutate(dist=sqrt((all5[,51] - all_clusters$centers[1,1])^2 +
+                                  (all5[,52] - all_clusters$centers[1,2])^2 +
+                                  (all5[,53] - all_clusters$centers[1,3])^2 ))
+
+all5[which.min(all5$dist), ]
+```
+
+```{r}
+all5$player
+```
+
+```{r}
+all6 <- filter(all_full, Cluster == 6)
+all6 <- all6 %>% mutate(dist=sqrt((all6[,51] - all_clusters$centers[1,1])^2 +
+                                  (all6[,52] - all_clusters$centers[1,2])^2 +
+                                  (all6[,53] - all_clusters$centers[1,3])^2 ))
+
+all6[which.min(all6$dist), ]
+```
+
+```{r}
+all6$player
+```
+
+
+```{r}
+all7 <- filter(all_full, Cluster == 7)
+all7 <- all7 %>% mutate(dist=sqrt((all7[,51] - all_clusters$centers[1,1])^2 +
+                                  (all7[,52] - all_clusters$centers[1,2])^2 +
+                                  (all7[,53] - all_clusters$centers[1,3])^2 ))
+
+all7[which.min(all7$dist), ]
+```
+
+```{r}
+all7$player
+```
+
+```{r}
+library(plotly)
+#Sys.setenv("plotly_username"="nikhil348")
+#Sys.setenv("plotly_api_key"="****************")
+p <- plot_ly(all_full, x = ~Component_1, y = ~Component_2, z = ~Component_3, color = ~Cluster, colors = c('#F8766D', '#C49A00', '#53B400', '#00C094', '#00B6EB', '#A58AFF', '#FB61D7')) %>%
+  add_markers() %>%
+  layout(title='Clusters of All-Stars',
+          scene=list(xaxis = list(title = 'Component 1'),
+                     yaxis = list(title = 'Component 2'),
+                     zaxis = list(title = 'Component 3')))
+p
+#chart_link = api_create(p, filename="all_star_clusters")
+#chart_link
+```
+
+
+```{r}
+library(ggplot2)
+ggplot(all_full, aes(Component_1, Component_2, color=as.factor(Cluster))) + geom_point() + scale_shape_manual(values=c(1,2,3,4,5,6,7)) + scale_color_manual(values=c('#F8766D', '#C49A00', '#53B400', '#00C094', '#00B6EB', '#A58AFF', '#FB61D7')) + labs(color='Cluster') 
+```
+
+did this just to get the legend so i could shop it onto the 3-d plot (instead of the garbage plotly legend)
+
+
+
+examination of why cluster 7 has 2 distinct player types
+
+```{r}
+forest_data <- all_full[,c(9:30, 32:50)]
+forest_data$Cluster <- ifelse(forest_data$Cluster == 7, 1, 0)
+forest_data$Cluster <- as.factor(forest_data$Cluster)
+```
+
+```{r}
+library(randomForest)
+forest.cluster <- randomForest(Cluster ~., data=forest_data, type="classification")
+```
+
+```{r}
+forest.cluster
+```
+
+
+```{r}
+varImpPlot(forest.cluster, sort = T, n.var=10 )
+```
+
+```{r}
+ggplot(all_full, aes(group=Cluster, x=Cluster, y=x2pa, color=as.factor(Cluster)))+
+  geom_boxplot() + 
+  scale_color_manual(values=c('#F8766D', '#C49A00', '#53B400', '#00C094', '#00B6EB', '#A58AFF', '#FB61D7')) + 
+  labs(color='Cluster') +
+  ggtitle("2 Pointers Attempted Across All Clusters") +
+  ylab ("2 Pointers Attempted Per Game")
+```
+
+```{r}
+ggplot(all_full, aes(group=Cluster, x=Cluster, y=x3par, color=as.factor(Cluster)))+
+  geom_boxplot() + 
+  scale_color_manual(values=c('#F8766D', '#C49A00', '#53B400', '#00C094', '#00B6EB', '#A58AFF', '#FB61D7')) + 
+  labs(color='Cluster') +
+  ggtitle("3-Point Attempt Rate Across All Clusters") +
+  ylab ("3-Point Attempt Rate")
+```
+
+

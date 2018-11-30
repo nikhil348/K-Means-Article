@@ -1,0 +1,183 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+setwd("/Users/nikhilsharma/Downloads")
+library(readr)
+all_players <- read_csv("regular_season_players.csv")
+```
+
+```{r}
+library(dplyr)
+library(magrittr)
+library(rvest)
+
+
+datalist = list()
+
+for (i in c(1980:1998, 2000:2017)){
+
+  
+  
+  ##east
+  main <- "https://widgets.sports-reference.com/wg.fcgi?css=1&site=bbr&url=%2Fallstar%2FNBA_"
+  tail <- ".html&div=div_East"
+
+  url <- paste0(main, i, tail)
+
+
+  east <- url %>%
+    read_html() %>%
+      html_table()
+  
+  
+  
+  east <- east[[1]]
+  colnames(east) <- east[1,]
+  east <- east[c(-1, -7, -8, -nrow(east)),]
+
+
+  
+  
+  
+  tail2 <- ".html&div=div_West"
+
+  url2 <- paste0(main, i, tail2)
+  
+  ##west
+
+  west <- url2 %>%
+    read_html() %>%
+      html_table()
+  
+  
+  west <- west[[1]]
+  colnames(west) <- west[1,]
+  west <- west[c(-1, -7, -8, -nrow(west)),]
+
+
+
+  all <- bind_rows(east, west)
+
+  all$i <- i
+  datalist[[i]] <- all
+
+}
+
+all_stars <- bind_rows(datalist)
+#View(all_stars)
+```
+
+```{r}
+url <- "https://widgets.sports-reference.com/wg.fcgi?css=1&site=bbr&url=%2Fallstar%2FNBA_2018.html&div=div_LeBron"
+
+lbj <- url %>% read_html() %>% html_table()
+  
+lbj <- lbj[[1]]
+colnames(lbj) <- lbj[1,]
+lbj <- lbj[c(-1, -7, -8, -nrow(lbj)),]
+
+
+url2 <- "https://widgets.sports-reference.com/wg.fcgi?css=1&site=bbr&url=%2Fallstar%2FNBA_2018.html&div=div_Stephen"
+  
+steph <- url2 %>% read_html() %>% html_table()
+  
+steph <- steph[[1]]
+colnames(steph) <- steph[1,]
+steph <- steph[c(-1, -7, -8, -nrow(steph)),]
+
+last_season <- bind_rows(lbj, steph)
+last_season$i <- 2018
+  
+#View(last_season)
+```
+
+```{r}
+all_stars <- bind_rows(all_stars, last_season)
+View(all_stars)
+```
+
+```{r}
+all_star_list <- all_stars %>% select(Starters, i)
+names(all_star_list)[1] <- "player"
+#View(all_star_list)
+```
+
+```{r}
+library(stringr)
+all_players$player <- str_remove_all(all_players$player, "\\*")
+#View(all_players)
+```
+
+```{r}
+all_star_stats <- merge(all_players, all_star_list, by=c("player", "i"))
+all_star_stats <- all_star_stats[!duplicated(all_star_stats), ]
+View(all_star_stats)
+```
+
+```{r}
+length(unique(all_star_list$player))
+length(unique(all_star_stats$player))
+```
+
+```{r}
+traded <- c(31, 32, 117, 119, 140, 142, 153, 155, 197, 198, 222, 224, 232, 234, 250, 251, 275, 277, 319, 320, 406, 407, 767, 768, 909, 911)
+all_star_stats_2 <- all_star_stats[-(traded),]
+View(all_star_stats_2)
+```
+
+```{r}
+length(traded)
+```
+
+```{r}
+table(all_star_list$i)
+```
+
+```{r}
+table(all_star_stats_2$i)
+```
+Magic Johnson is missing in 1992, because he did not play the season but played that ASG.
+
+```{r}
+all_star_stats_2 <- all_star_stats_2[,-3:-4]
+```
+
+```{r}
+all_star_stats_2 <- all_star_stats_2[,-7] ##gs
+all_star_stats_2$x3ppercent[is.na(all_star_stats_2$x3ppercent)] <- 0
+```
+
+
+```{r}
+sum(is.na(all_star_stats_2))
+```
+
+```{r}
+(all_star_stats_2[!complete.cases(all_star_stats_2),])
+```
+
+
+```{r}
+library(tibble)
+rebounds <- all_star_stats_2$orb + all_star_stats_2$drb
+all_star_stats_2 <- add_column(all_star_stats_2, trb = rebounds, .after = "drb")
+```
+
+```{r}
+View(all_star_stats_2)
+```
+
+
+```{r}
+write.csv(all_star_stats_2, file="all_stars.csv")
+```
+
+
+
