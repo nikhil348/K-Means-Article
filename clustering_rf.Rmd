@@ -1,0 +1,164 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+setwd("/Users/nikhilsharma/Downloads/clustering_final")
+library(readr)
+data <- read_csv("all_stars.csv")
+```
+
+```{r}
+#View(data)
+```
+ 
+principal components analysis
+```{r}
+z <- prcomp(data[,c(9:30, 32:49)], center = TRUE,scale. = TRUE)
+
+summary(z)
+```
+
+create dataframe with only components
+```{r}
+c <- z[["x"]]
+all <- cbind.data.frame(data$player, data$i, data$tm, c[,1], c[,2], c[,3])
+names(all) <- c("Player", "i", "Team", "Component_1", "Component_2", "Component_3")
+#View(all)
+```
+
+determining optimal number of clusters
+```{r}
+library(factoextra)
+set.seed(123)
+fviz_nbclust(all[,4:6], kmeans, method = "silhouette")
+```
+
+clustering
+```{r}
+set.seed(123)
+all_clusters <- kmeans(all[,4:6], 7, nstart=25)
+all_clusters
+```
+
+```{r}
+all_full <- cbind.data.frame(data, all_clusters$cluster, all[,4], all[,5], all[,6])
+#View(all_full)
+```
+
+```{r}
+names(all_full)[50:53]  <- c("Cluster", "Component_1", "Component_2", "Component_3")
+```
+
+1st cluster
+```{r}
+forest_data <- all_full[,c(9:30, 32:50)]
+library(dplyr)
+all1 <- filter(all_full, Cluster == 1)
+forest_data$Cluster <- ifelse(forest_data$Cluster == 1, 1, 0)
+forest_data$Cluster <- as.factor(forest_data$Cluster)
+library(randomForest)
+forest.cluster <- randomForest(Cluster ~., data=forest_data, type="classification")
+varImpPlot(forest.cluster, sort = T, n.var=10 )
+```
+
+```{r}
+arrange(all1, desc(ws_48))
+```
+
+Derrick Rose, 2012
+
+```{r}
+forest_data <- all_full[,c(9:30, 32:50)]
+all2 <- filter(all_full, Cluster == 2)
+forest_data$Cluster <- ifelse(forest_data$Cluster == 2, 1, 0)
+forest_data$Cluster <- as.factor(forest_data$Cluster)
+forest.cluster <- randomForest(Cluster ~., data=forest_data, type="classification")
+varImpPlot(forest.cluster, sort = T, n.var=10 )
+```
+
+```{r}
+arrange(all2, desc(blk))
+```
+
+Hakeem Olajuwon, 1990
+
+```{r}
+forest_data <- all_full[,c(9:30, 32:50)]
+all3 <- filter(all_full, Cluster == 3)
+forest_data$Cluster <- ifelse(forest_data$Cluster == 3, 1, 0)
+forest_data$Cluster <- as.factor(forest_data$Cluster)
+forest.cluster <- randomForest(Cluster ~., data=forest_data, type="classification")
+varImpPlot(forest.cluster, sort = T, n.var=10 )
+```
+
+```{r}
+arrange(all3, desc(orbpercent))
+```
+
+Moses Malone, 1988
+
+```{r}
+forest_data <- all_full[,c(9:30, 32:50)]
+all4 <- filter(all_full, Cluster == 4)
+forest_data$Cluster <- ifelse(forest_data$Cluster == 4, 1, 0)
+forest_data$Cluster <- as.factor(forest_data$Cluster)
+forest.cluster <- randomForest(Cluster ~., data=forest_data, type="classification")
+varImpPlot(forest.cluster, sort = T, n.var=10 )
+```
+
+```{r}
+arrange(all4, desc(obpm))
+```
+
+Steph Curry, 2016
+
+```{r}
+forest_data <- all_full[,c(9:30, 32:50)]
+all5 <- filter(all_full, Cluster == 5)
+forest_data$Cluster <- ifelse(forest_data$Cluster == 5, 1, 0)
+forest_data$Cluster <- as.factor(forest_data$Cluster)
+forest.cluster <- randomForest(Cluster ~., data=forest_data, type="classification")
+varImpPlot(forest.cluster, sort = T, n.var=10 )
+```
+
+```{r}
+arrange(all5, desc(ps_g))
+```
+
+George Gervin, 1980
+
+```{r}
+forest_data <- all_full[,c(9:30, 32:50)]
+all6 <- filter(all_full, Cluster == 6)
+forest_data$Cluster <- ifelse(forest_data$Cluster == 6, 1, 0)
+forest_data$Cluster <- as.factor(forest_data$Cluster)
+forest.cluster <- randomForest(Cluster ~., data=forest_data, type="classification")
+varImpPlot(forest.cluster, sort = T, n.var=10 )
+```
+
+```{r}
+arrange(all6, desc(fga))
+```
+
+Shawn Marion, 2007
+
+```{r}
+forest_data <- all_full[,c(9:30, 32:50)]
+all7 <- filter(all_full, Cluster == 7)
+forest_data$Cluster <- ifelse(forest_data$Cluster == 7, 1, 0)
+forest_data$Cluster <- as.factor(forest_data$Cluster)
+forest.cluster <- randomForest(Cluster ~., data=forest_data, type="classification")
+varImpPlot(forest.cluster, sort = T, n.var=10 )
+```
+
+```{r}
+arrange(all7, desc(x2pa))
+```
+
+Tim Hardaway, 1991
